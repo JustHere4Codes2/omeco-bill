@@ -90,23 +90,17 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-
-/* ✅ Define expected prop structure */
 interface Bill {
   meter: {
     consumption: number
   }
 }
-
 const props = defineProps<{
   bill: Bill
 }>()
-
-/* ✅ Computed values instead of hardcoded numbers */
 const ghgEmission = computed(() =>
   (props.bill.meter.consumption * 0.0009129).toFixed(4)
 )
-
 const treeOffset = computed(() =>
   Math.ceil(
     (props.bill.meter.consumption * 0.0009129) / 0.02178
