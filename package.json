@@ -10,10 +10,13 @@
   },
   "dependencies": {
     "@nuxt/content": "^3.11.0",
+    "apexcharts": "^5.3.6",
     "better-sqlite3": "^12.6.2",
-    "nuxt": "^4.3.0"
+    "nuxt": "^4.3.0",
+    "vue3-apexcharts": "^1.10.0"
   },
   "devDependencies": {
+    "@nuxtjs/color-mode": "^4.0.0",
     "@unocss/nuxt": "^66.6.0",
     "unocss": "^66.6.0"
   }
