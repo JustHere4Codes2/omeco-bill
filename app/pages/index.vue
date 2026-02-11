@@ -31,43 +31,44 @@ const printBill = () => {
         <div class="space-y-4">
 
           <!-- BILL INFO -->
-          <section class="border border-gray-300 rounded p-3">
-            <h1 class="text-base font-bold text-gray-800 mb-2">
-              Your Electric Bill
-            </h1>
+          <section class="border border-gray-300 rounded p-2">
+              <h1 class="text-sm font-bold text-gray-800 mb-1">
+                Your Electric Bill
+              </h1>
 
-            <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-              <div>
-                <p class="text-gray-500 text-xs">Billing Period</p>
-                <p class="font-semibold">{{ bill.billingPeriod }}</p>
-              </div>
+              <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs leading-tight">
+                <div>
+                  <p class="text-gray-500 text-[10px]">Billing Period</p>
+                  <p class="font-semibold">{{ bill.billingPeriod }}</p>
+                </div>
 
-              <div>
-                <p class="text-gray-500 text-xs">Bill Date</p>
-                <p class="font-semibold">{{ bill.billDate }}</p>
-              </div>
+                <div>
+                  <p class="text-gray-500 text-[10px]">Bill Date</p>
+                  <p class="font-semibold">{{ bill.billDate }}</p>
+                </div>
 
-              <div>
-                <p class="text-gray-500 text-xs">Meter Reading</p>
-                <p class="font-semibold">{{ bill.meter.readingDate }}</p>
-              </div>
+                <div>
+                  <p class="text-gray-500 text-[10px]">Meter Reading</p>
+                  <p class="font-semibold">{{ bill.meter.readingDate }}</p>
+                </div>
 
-              <div>
-                <p class="text-gray-500 text-xs">Meter No.</p>
-                <p class="font-semibold">{{ bill.meterNumber }}</p>
-              </div>
+                <div>
+                  <p class="text-gray-500 text-[10px]">Meter No.</p>
+                  <p class="font-semibold">{{ bill.meterNumber }}</p>
+                </div>
 
-              <div>
-                <p class="text-gray-500 text-xs">Customer Type</p>
-                <p class="font-semibold">{{ bill.customerType }}</p>
-              </div>
+                <div>
+                  <p class="text-gray-500 text-[10px]">Customer Type</p>
+                  <p class="font-semibold">{{ bill.customerType }}</p>
+                </div>
 
-              <div>
-                <p class="text-gray-500 text-xs">Rate/kWh</p>
-                <p class="font-semibold">₱{{ bill.ratePerKwh.toFixed(2) }}</p>
+                <div>
+                  <p class="text-gray-500 text-[10px]">Rate/kWh</p>
+                  <p class="font-semibold">₱{{ bill.ratePerKwh.toFixed(2) }}</p>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+
 
           <section>
             <OmecoConsumptionSection :bill="bill" />
