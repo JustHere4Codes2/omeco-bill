@@ -99,6 +99,10 @@ onBeforeUnmount(() => {
         <div class="w-3 h-3 bg-gray-700" />
         <span class="text-gray-600">2025</span>
       </div>
+      <div class="flex items-center gap-1.5">
+        <div class="w-3 h-3 bg-gray-900" />
+        <span class="text-gray-600">2026</span>
+      </div>
     </div>
 
     <!-- ApexCharts Container -->
