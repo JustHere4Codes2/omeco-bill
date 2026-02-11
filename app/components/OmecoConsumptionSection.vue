@@ -170,50 +170,5 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </div>
-
-    <!-- Environmental Impact -->
-    <div v-if="bill.environmentalImpact" class="border-t border-gray-300 pt-3 mt-3">
-      <h3 class="font-bold text-gray-900 mb-2 text-sm">Environmental Impact</h3>
-      <p class="text-xs text-gray-600 mb-3">Be energy efficient. Save and help take care of our environment</p>
-      
-      <div class="flex items-center gap-6 text-xs">
-        <div class="flex items-center gap-2">
-          <svg class="w-8 h-8 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-          </svg>
-          <div>
-            <p class="font-bold text-gray-900">{{ bill.environmentalImpact.electricityUsed }} kWh</p>
-            <p class="text-gray-600 text-[11px]">Electricity Used</p>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <svg class="w-8 h-8 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <circle cx="12" cy="12" r="10" stroke-width="2"/>
-            <path stroke-width="2" d="M12 6v6l4 2"/>
-          </svg>
-          <div>
-            <p class="font-bold text-gray-900">{{ bill.environmentalImpact.co2Emissions }} tCO₂e*</p>
-            <p class="text-gray-600 text-[11px]">Equiv. GHG Emissions</p>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <svg class="w-8 h-8 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path stroke-width="2" d="M12 2L2 7l10 5 10-5-10-5z"/>
-            <path stroke-width="2" d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
-          </svg>
-          <div>
-            <p class="font-bold text-gray-900">{{ bill.environmentalImpact.treesRequired }} trees**</p>
-            <p class="text-gray-600 text-[11px]">Offset Emissions</p>
-          </div>
-        </div>
-      </div>
-
-      <p class="text-[10px] text-gray-500 mt-3 leading-tight">
-        *Using DOE's 2015-2017 National Emission Grid Factor of {{ bill.environmentalImpact.emissionFactor }} tCO2/kWh<br>
-        **Per Arbor Day Foundation, 1 mature tree can absorb 48 pounds (0.02178 tonnes) of CO2/year
-      </p>
-    </div>
   </section>
 </template>
