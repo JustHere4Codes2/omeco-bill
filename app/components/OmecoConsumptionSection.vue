@@ -6,18 +6,25 @@ import type { ApexOptions } from 'apexcharts'
 const props = defineProps<{ bill: OmecoBill }>()
 
 const chartContainer = ref<HTMLDivElement | null>(null)
-let chart: any = null // runtime-safe
+let chart: any = null
 
 const monthlyData = computed(() => {
   if (props.bill.consumptionHistory?.length) {
-    const map = new Map<string, { kwh2024: number | null; kwh2025: number | null }>()
-    for (const item of props.bill.consumptionHistory) {
-      const entry = map.get(item.month) ?? { kwh2024: null, kwh2025: null }
-      if (item.year === 2024) entry.kwh2024 = item.consumption
-      if (item.year === 2025) entry.kwh2025 = item.consumption
-      map.set(item.month, entry)
-    }
-    return Array.from(map.entries()).map(([month, v]) => ({ month, ...v }))
+    const grouped = props.bill.consumptionHistory.reduce((acc, item) => {
+      const existing = acc.find(i => i.month === item.month)
+      if (existing) {
+        if (item.year === 2024) existing.kwh2024 = item.consumption
+        if (item.year === 2025) existing.kwh2025 = item.consumption
+      } else {
+        acc.push({
+          month: item.month,
+          kwh2024: item.year === 2024 ? item.consumption : null,
+          kwh2025: item.year === 2025 ? item.consumption : null,
+        })
+      }
+      return acc
+    }, [] as Array<{ month: string; kwh2024: number | null; kwh2025: number | null }>)
+    return grouped
   }
 
   return [
@@ -38,26 +45,44 @@ const monthlyData = computed(() => {
 
 onMounted(async () => {
   if (!process.client || !chartContainer.value) return
-
   const { default: ApexCharts } = await import('apexcharts')
 
   const options: ApexOptions = {
-    chart: {
-      type: 'bar',
-      height: 180,
-      toolbar: { show: false },
-      animations: { enabled: false },
-      fontFamily: 'inherit',
-    },
     series: [
       { name: '2024', data: monthlyData.value.map(d => d.kwh2024 ?? 0) },
       { name: '2025', data: monthlyData.value.map(d => d.kwh2025 ?? 0) },
     ],
-    plotOptions: { bar: { columnWidth: '80%' } },
-    colors: ['#9CA3AF', '#374151'],
-    xaxis: { categories: monthlyData.value.map(d => d.month) },
-    yaxis: { min: 0, tickAmount: 6 },
+    chart: {
+      type: 'bar',
+      height: 150, // reduced for A4 fit
+      toolbar: { show: false },
+      animations: { enabled: false },
+      fontFamily: 'inherit',
+    },
+    plotOptions: {
+      bar: {
+        columnWidth: '75%',
+        borderRadius: 0,
+      },
+    },
     dataLabels: { enabled: false },
+    stroke: { show: false },
+    colors: ['#9CA3AF', '#374151'],
+    xaxis: {
+      categories: monthlyData.value.map(d => d.month),
+      labels: {
+        style: {
+          fontSize: '9px',
+        },
+      },
+    },
+    yaxis: {
+      min: 0,
+      tickAmount: 5,
+      labels: {
+        style: { fontSize: '9px' },
+      },
+    },
     legend: { show: false },
   }
 
@@ -72,104 +97,93 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section class="bg-white border-t-2 border-gray-300 pt-4 print:pt-3">
+  <section class="bg-white border-t-2 border-gray-300 pt-3 print:pt-2">
+
     <!-- Header -->
-    <div class="flex items-center justify-between mb-3">
-      <h2 class="text-base font-bold text-gray-800">
+    <div class="flex items-center justify-between mb-2">
+      <h2 class="text-sm font-bold text-gray-800">
         Your monthly consumption
       </h2>
       <div class="text-right">
-        <p class="text-2xl font-bold text-gray-900">
+        <p class="text-xl font-bold text-gray-900">
           {{ bill.meter.consumption }}
-          <span class="text-sm">°C▼</span>
-        </p>
-        <p class="text-xs text-gray-600 leading-tight">
-          Ave. temp this month:<br>0.7 deg. lower than prev.
+          <span class="text-xs">KWh</span>
         </p>
       </div>
     </div>
 
-    <!-- Chart Legend -->
-    <div class="flex items-center gap-4 mb-2 text-xs">
+    <!-- Legend -->
+    <div class="flex items-center gap-4 mb-2 text-[10px]">
       <div class="flex items-center gap-1.5">
         <div class="w-3 h-3 bg-gray-400" />
-        <span class="text-gray-600">2024</span>
+        <span>2024</span>
       </div>
       <div class="flex items-center gap-1.5">
         <div class="w-3 h-3 bg-gray-700" />
-        <span class="text-gray-600">2025</span>
-      </div>
-      <div class="flex items-center gap-1.5">
-        <div class="w-3 h-3 bg-gray-900" />
-        <span class="text-gray-600">2026</span>
+        <span>2025</span>
       </div>
     </div>
 
-    <!-- ApexCharts Container -->
+    <!-- Chart -->
     <div ref="chartContainer" class="mb-3" />
 
-    <!-- kWh values below chart -->
-    <div class="flex gap-1 mb-4">
-      <div class="w-8 text-xs text-gray-600 text-right pr-1">kWh</div>
-      <div class="flex-1 grid grid-cols-12 text-xs text-center">
-        <div v-for="data in monthlyData" :key="data.month" class="space-y-0.5">
-          <div class="font-semibold text-gray-900">{{ data.kwh2025 || '-' }}</div>
-          <div class="text-gray-400 text-[10px]">{{ data.kwh2024 || '-' }}</div>
+    <!-- Values -->
+    <div class="flex gap-1 mb-3">
+      <div class="w-8 text-[10px] text-right pr-1">KWh</div>
+      <div class="flex-1 grid grid-cols-12 text-[9px] text-center">
+        <div v-for="data in monthlyData" :key="data.month">
+          <div class="font-semibold">{{ data.kwh2025 ?? '-' }}</div>
+          <div class="text-gray-400 text-[8px]">{{ data.kwh2024 ?? '-' }}</div>
         </div>
       </div>
     </div>
 
     <!-- Consumption Explanation -->
-    <div class="grid grid-cols-2 gap-3 text-xs mb-3">
-      <!-- Left: Your consumption explained -->
-      <div class="space-y-2">
-        <h3 class="font-bold text-gray-900 mb-2 text-sm">Your consumption explained</h3>
-        
-        <div v-if="bill.comparisonToPreviousPeriod" class="flex items-start gap-2">
-          <span class="text-lg">{{ bill.comparisonToPreviousPeriod.direction === 'lower' ? '▼' : '▲' }}</span>
-          <div class="leading-tight">
-            <p class="font-medium text-gray-900">
-              This bill is {{ bill.comparisonToPreviousPeriod.percentage }}% {{ bill.comparisonToPreviousPeriod.direction }} 
-              ({{ bill.comparisonToPreviousPeriod.direction === 'lower' ? '-' : '+' }}{{ bill.comparisonToPreviousPeriod.difference }}kWh)
-            </p>
-            <p class="text-gray-600 text-xs">vs previous billing period</p>
-          </div>
+    <div class="grid grid-cols-2 gap-3 text-[10px] mb-2">
+      <div class="space-y-1">
+        <h3 class="font-bold text-sm mb-1">Your consumption explained</h3>
+
+        <div v-if="bill.comparisonToPreviousPeriod" class="flex gap-1">
+          <span>{{ bill.comparisonToPreviousPeriod.direction === 'lower' ? '▼' : '▲' }}</span>
+          <p>
+            {{ bill.comparisonToPreviousPeriod.percentage }}%
+            {{ bill.comparisonToPreviousPeriod.direction }}
+            ({{ bill.comparisonToPreviousPeriod.difference }}kWh)
+          </p>
         </div>
 
-        <div v-if="bill.comparisonToLastYear" class="flex items-start gap-2">
-          <span class="text-lg">{{ bill.comparisonToLastYear.direction === 'lower' ? '▼' : '▲' }}</span>
-          <div class="leading-tight">
-            <p class="font-medium text-gray-900">
-              This bill is {{ bill.comparisonToLastYear.percentage }}% {{ bill.comparisonToLastYear.direction }} 
-              ({{ bill.comparisonToLastYear.direction === 'lower' ? '-' : '+' }}{{ bill.comparisonToLastYear.difference }}kWh)
-            </p>
-            <p class="text-gray-600 text-xs">vs same period last year</p>
-          </div>
+        <div v-if="bill.comparisonToLastYear" class="flex gap-1">
+          <span>{{ bill.comparisonToLastYear.direction === 'lower' ? '▼' : '▲' }}</span>
+          <p>
+            {{ bill.comparisonToLastYear.percentage }}%
+            {{ bill.comparisonToLastYear.direction }}
+            ({{ bill.comparisonToLastYear.difference }}kWh)
+          </p>
         </div>
       </div>
 
-      <!-- Right: Your typical consumption -->
-      <div class="border border-gray-300 rounded-lg p-3">
-        <h3 class="font-bold text-gray-900 mb-3 text-sm">Your typical consumption</h3>
-        
+      <!-- Typical Consumption -->
+      <div class="border border-gray-300 rounded p-2">
+        <h3 class="font-bold text-sm mb-2">Your typical consumption</h3>
+
         <div class="grid grid-cols-3 gap-2 text-center">
           <div>
-            <p class="text-lg font-bold text-gray-900">{{ bill.averageMonthlyConsumption || bill.meter.consumption }}</p>
-            <p class="text-[10px] text-gray-600 leading-tight">
-              kWh<br>Ave. monthly<br>consumption<br>(last 12<br>months)
+            <p class="text-base font-bold">
+              {{ bill.averageMonthlyConsumption || bill.meter.consumption }}
             </p>
+            <p class="text-[8px]">Ave. monthly</p>
           </div>
           <div>
-            <p class="text-lg font-bold text-gray-900">{{ bill.averageDailyConsumption || Math.round(bill.meter.consumption / 30) }}</p>
-            <p class="text-[10px] text-gray-600 leading-tight">
-              kWh<br>Ave. daily<br>consumption<br>this bill<br>period
+            <p class="text-base font-bold">
+              {{ bill.averageDailyConsumption || Math.round(bill.meter.consumption / 30) }}
             </p>
+            <p class="text-[8px]">Ave. daily</p>
           </div>
           <div>
-            <p class="text-lg font-bold text-gray-900">₱{{ bill.averageDailyCost?.toFixed(1) || bill.ratePerKwh.toFixed(1) }}</p>
-            <p class="text-[10px] text-gray-600 leading-tight">
-              Ave. daily<br>cost this bill<br>period
+            <p class="text-base font-bold">
+              ₱{{ bill.averageDailyCost?.toFixed(1) || bill.ratePerKwh.toFixed(1) }}
             </p>
+            <p class="text-[8px]">Ave. daily cost</p>
           </div>
         </div>
       </div>

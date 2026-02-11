@@ -26,6 +26,9 @@ defineProps<{
       <p class="text-5xl font-bold text-gray-900">
         ₱ {{ bill.totalAmountDue.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
       </p>
+      <p class="text-sm text-gray-500 mt-1">
+        Amount due after {{ bill.dueDate }} may be subject to penalties.
+      </p>
     </div>
 
     <!-- Bill Computation Summary -->
