@@ -1,11 +1,47 @@
+// -----------------------------
+// Charge Keys (Strict Union)
+// -----------------------------
+export type OmecoChargeKey =
+  | 'generation'
+  | 'transmission'
+  | 'systemLoss'
+  | 'distribution'
+  | 'subsidies'
+  | 'governmentTaxes'
+  | 'universalCharges'
+  | 'fitAll'
+  | 'appliedCredits'
+  | 'otherCharges'
+  | 'installmentDue'
+
+// -----------------------------
+// Charge Category
+// -----------------------------
+export type OmecoChargeCategory =
+  | 'energy'
+  | 'delivery'
+  | 'tax'
+  | 'other'
+
+// -----------------------------
+// Charge Interface
+// -----------------------------
 export interface OmecoCharge {
-  key: 'generation' | 'transmission' | 'systemLoss' | 'distribution' | 'subsidies' | 'governmentTaxes' | 'universalCharges' | 'fitAll' | 'appliedCredits' | 'otherCharges' | 'installmentDue' | string
+  key: OmecoChargeKey
   label: string
+
+  // For computation table (back page)
+  base?: number | string
+  price?: number | string
+
   amount: number
-  category?: 'energy' | 'delivery' | 'tax' | 'other'
+  category?: OmecoChargeCategory
   description?: string
 }
 
+// -----------------------------
+// Meter Reading
+// -----------------------------
 export interface OmecoMeterReading {
   previous: number
   current: number
@@ -15,6 +51,9 @@ export interface OmecoMeterReading {
   multiplier?: number
 }
 
+// -----------------------------
+// Consumption History
+// -----------------------------
 export interface OmecoConsumptionHistory {
   month: string
   year: number
@@ -22,19 +61,28 @@ export interface OmecoConsumptionHistory {
   amount?: number
 }
 
+// -----------------------------
+// Environmental Impact
+// -----------------------------
 export interface OmecoEnvironmentalImpact {
-  electricityUsed: number // kWh
-  co2Emissions: number // tCO2e
-  treesRequired: number // number of trees to offset
-  emissionFactor?: number // tCO2/kWh
+  electricityUsed: number
+  co2Emissions: number
+  treesRequired: number
+  emissionFactor?: number
 }
 
+// -----------------------------
+// Payment Channel
+// -----------------------------
 export interface OmecoPaymentChannel {
   type: 'office' | 'online' | 'partner' | 'bank'
   name: string
   instructions?: string
 }
 
+// -----------------------------
+// Contact Info
+// -----------------------------
 export interface OmecoContactInfo {
   office: string
   address: string
@@ -48,26 +96,30 @@ export interface OmecoContactInfo {
   tin?: string
 }
 
+// -----------------------------
+// Main Bill Interface
+// -----------------------------
 export interface OmecoBill {
   // Identification
   billStatementNumber: string
+  serviceId: string
   accountNumber: string
   consumerName: string
   address: string
   customerType: 'residential' | 'commercial' | 'industrial'
 
-  // Billing Period Info
+  // Billing Period
   billingPeriod: string
   billDate: string
   dueDate: string
   disconnectionDate?: string
-  
-  // Meter Information
+
+  // Meter
   meterNumber: string
   meterType?: 'analog' | 'digital' | 'smart'
   ratePerKwh: number
   meter: OmecoMeterReading
-  
+
   // Consumption Data
   consumptionHistory?: OmecoConsumptionHistory[]
   averageMonthlyConsumption?: number
@@ -75,16 +127,16 @@ export interface OmecoBill {
   averageDailyCost?: number
   comparisonToPreviousPeriod?: {
     percentage: number
-    difference: number // in kWh
+    difference: number
     direction: 'higher' | 'lower'
   }
   comparisonToLastYear?: {
     percentage: number
-    difference: number // in kWh
+    difference: number
     direction: 'higher' | 'lower'
   }
 
-  // Financial Information
+  // Financial
   previousBalance: number
   unpaidBills?: {
     billDate: string
@@ -94,53 +146,57 @@ export interface OmecoBill {
   totalChargesThisPeriod: number
   installmentDue?: number
   totalAmountDue: number
-  
-  // Payment Information
+
+  // Payment
   paymentChannels?: OmecoPaymentChannel[]
-  qrCode?: string // QR code data
-  barcode?: string // Barcode data
+  qrCode?: string
+  barcode?: string
   paymentReferenceNumber?: string
-  
-  // Environmental Impact
+
+  // Environmental
   environmentalImpact?: OmecoEnvironmentalImpact
-  
-  // Additional Information
+
+  // Additional
   contactInfo?: OmecoContactInfo
   notes?: string[]
-  isEstimated?: boolean // If meter reading is estimated
+  isEstimated?: boolean
   permitNumber?: string
   pageNumber?: number
   totalPages?: number
 }
 
-// Helper type for charge calculations
-export interface ChargeBreakdown {
-  generation: number
-  transmission: number
-  systemLoss: number
-  distribution: number
-  subsidies: number
-  governmentTaxes: number
-  universalCharges: number
-  fitAll: number
-  appliedCredits: number
-  otherCharges: number
-}
+// -----------------------------
+// Charge Breakdown (Strict)
+// -----------------------------
+export type ChargeBreakdown = Record<OmecoChargeKey, number>
 
-// Utility functions for type safety
-export function calculateTotalCharges(charges: OmecoCharge[]): number {
+// -----------------------------
+// Utility Functions
+// -----------------------------
+export function calculateTotalCharges(
+  charges: OmecoCharge[]
+): number {
   return charges.reduce((sum, charge) => sum + charge.amount, 0)
 }
 
-export function getChargeByKey(charges: OmecoCharge[], key: string): OmecoCharge | undefined {
+export function getChargeByKey(
+  charges: OmecoCharge[],
+  key: OmecoChargeKey
+): OmecoCharge | undefined {
   return charges.find(charge => charge.key === key)
 }
 
-export function categorizeCharges(charges: OmecoCharge[]): Record<string, OmecoCharge[]> {
+export function categorizeCharges(
+  charges: OmecoCharge[]
+): Record<OmecoChargeCategory, OmecoCharge[]> {
   return charges.reduce((acc, charge) => {
-    const category = charge.category || 'other'
-    if (!acc[category]) acc[category] = []
+    const category = charge.category ?? 'other'
     acc[category].push(charge)
     return acc
-  }, {} as Record<string, OmecoCharge[]>)
+  }, {
+    energy: [],
+    delivery: [],
+    tax: [],
+    other: []
+  } as Record<OmecoChargeCategory, OmecoCharge[]>)
 }

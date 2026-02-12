@@ -125,11 +125,11 @@ const printBill = () => {
 @media print {
   @page {
     size: A4;
-    margin: 10mm;
+    margin: 1mm;
   }
 
   html {
-    font-size: 11px;
+    font-size: 12px;
   }
 
   section,
