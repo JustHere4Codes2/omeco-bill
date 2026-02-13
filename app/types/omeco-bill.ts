@@ -1,6 +1,6 @@
-// -----------------------------
-// Charge Keys (Strict Union)
-// -----------------------------
+// =====================================================
+// CHARGE KEYS (STRICT)
+// =====================================================
 export type OmecoChargeKey =
   | 'generation'
   | 'transmission'
@@ -14,75 +14,79 @@ export type OmecoChargeKey =
   | 'otherCharges'
   | 'installmentDue'
 
-// -----------------------------
-// Charge Category
-// -----------------------------
+// =====================================================
+// CHARGE CATEGORY
+// =====================================================
 export type OmecoChargeCategory =
   | 'energy'
   | 'delivery'
   | 'tax'
   | 'other'
 
-// -----------------------------
-// Charge Interface
-// -----------------------------
+// =====================================================
+// CHARGE
+// =====================================================
 export interface OmecoCharge {
   key: OmecoChargeKey
   label: string
 
-  // For computation table (back page)
-  base?: number | string
-  price?: number | string
+  /**
+   * Optional fields used for back-page computation display.
+   * Always store numeric values internally.
+   */
+  base?: number
+  price?: number
 
   amount: number
-  category?: OmecoChargeCategory
+  category: OmecoChargeCategory
   description?: string
 }
 
-// -----------------------------
-// Meter Reading
-// -----------------------------
+// =====================================================
+// METER READING
+// =====================================================
 export interface OmecoMeterReading {
   previous: number
   current: number
   consumption: number
-  readingDate: string
+  readingDate: string // ISO format recommended
   nextReadingDate?: string
   multiplier?: number
 }
 
-// -----------------------------
-// Consumption History
-// -----------------------------
+// =====================================================
+// CONSUMPTION HISTORY
+// =====================================================
 export interface OmecoConsumptionHistory {
   month: string
   year: number
   consumption: number
   amount?: number
+  paymentStatus?: 'paid' | 'unpaid' | 'overdue'
 }
 
-// -----------------------------
-// Environmental Impact
-// -----------------------------
+// =====================================================
+// ENVIRONMENTAL IMPACT
+// =====================================================
 export interface OmecoEnvironmentalImpact {
   electricityUsed: number
   co2Emissions: number
   treesRequired: number
-  emissionFactor?: number
+  emissionFactor: number
 }
 
-// -----------------------------
-// Payment Channel
-// -----------------------------
+// =====================================================
+// PAYMENT CHANNEL
+// =====================================================
 export interface OmecoPaymentChannel {
   type: 'office' | 'online' | 'partner' | 'bank'
   name: string
   instructions?: string
 }
 
-// -----------------------------
-// Contact Info
-// -----------------------------
+// =====================================================
+// CONTACT INFO
+// =====================================================
 export interface OmecoContactInfo {
   office: string
   address: string
@@ -96,9 +100,29 @@ export interface OmecoContactInfo {
   tin?: string
 }
 
-// -----------------------------
-// Main Bill Interface
-// -----------------------------
+// =====================================================
+// UNPAID BILL
+// =====================================================
+export interface OmecoUnpaidBill {
+  billDate: string
+  dueDate: string
+  amount: number
+  status: 'overdue' | 'pending'
+}
+
+// =====================================================
+// PAYMENT HISTORY
+// =====================================================
+export interface OmecoPaymentHistory {
+  date: string
+  amount: number
+  referenceNumber: string
+  method?: string
+}
+
+// =====================================================
+// MAIN BILL
+// =====================================================
 export interface OmecoBill {
   // Identification
   billStatementNumber: string
@@ -108,7 +132,7 @@ export interface OmecoBill {
   address: string
   customerType: 'residential' | 'commercial' | 'industrial'
 
-  // Billing Period
+  // Billing
   billingPeriod: string
   billDate: string
   dueDate: string
@@ -120,16 +144,18 @@ export interface OmecoBill {
   ratePerKwh: number
   meter: OmecoMeterReading
 
-  // Consumption Data
+  // Consumption
   consumptionHistory?: OmecoConsumptionHistory[]
   averageMonthlyConsumption?: number
   averageDailyConsumption?: number
   averageDailyCost?: number
+
   comparisonToPreviousPeriod?: {
     percentage: number
     difference: number
     direction: 'higher' | 'lower'
   }
+
   comparisonToLastYear?: {
     percentage: number
     difference: number
@@ -138,16 +164,14 @@ export interface OmecoBill {
 
   // Financial
   previousBalance: number
-  unpaidBills?: {
-    billDate: string
-    amount: number
-  }[]
+  unpaidBills?: OmecoUnpaidBill[]
+  paymentHistory?: OmecoPaymentHistory[]
   charges: OmecoCharge[]
   totalChargesThisPeriod: number
   installmentDue?: number
   totalAmountDue: number
 
-  // Payment
+  // Payment Data
   paymentChannels?: OmecoPaymentChannel[]
   qrCode?: string
   barcode?: string
@@ -156,7 +180,7 @@ export interface OmecoBill {
   // Environmental
   environmentalImpact?: OmecoEnvironmentalImpact
 
-  // Additional
+  // Other
   contactInfo?: OmecoContactInfo
   notes?: string[]
   isEstimated?: boolean
@@ -165,14 +189,15 @@ export interface OmecoBill {
   totalPages?: number
 }
 
-// -----------------------------
-// Charge Breakdown (Strict)
-// -----------------------------
-export type ChargeBreakdown = Record<OmecoChargeKey, number>
+// =====================================================
+// BREAKDOWN TYPE
+// =====================================================
+export type ChargeBreakdown = Partial<Record<OmecoChargeKey, number>>
 
-// -----------------------------
-// Utility Functions
-// -----------------------------
+// =====================================================
+// UTILITIES
+// =====================================================
+
 export function calculateTotalCharges(
   charges: OmecoCharge[]
 ): number {
@@ -189,14 +214,54 @@ export function getChargeByKey(
 export function categorizeCharges(
   charges: OmecoCharge[]
 ): Record<OmecoChargeCategory, OmecoCharge[]> {
-  return charges.reduce((acc, charge) => {
-    const category = charge.category ?? 'other'
-    acc[category].push(charge)
-    return acc
-  }, {
+
+  const initial: Record<OmecoChargeCategory, OmecoCharge[]> = {
     energy: [],
     delivery: [],
     tax: [],
     other: []
-  } as Record<OmecoChargeCategory, OmecoCharge[]>)
+  }
+
+  return charges.reduce((acc, charge) => {
+    acc[charge.category].push(charge)
+    return acc
+  }, initial)
+}
+
+export function calculateTotalUnpaid(
+  unpaidBills?: OmecoUnpaidBill[]
+): number {
+  if (!unpaidBills?.length) return 0
+  return unpaidBills.reduce((sum, bill) => sum + bill.amount, 0)
+}
+
+export function calculateTotalPaid(
+  paymentHistory?: OmecoPaymentHistory[]
+): number {
+  if (!paymentHistory?.length) return 0
+  return paymentHistory.reduce((sum, payment) => sum + payment.amount, 0)
+}
+
+
+/**
+ * Calculates number of days overdue.
+ * Expects ISO date format (YYYY-MM-DD).
+ */
+export function getDaysOverdue(dueDate: string): number {
+  const due = new Date(dueDate)
+  if (isNaN(due.getTime())) return 0
+
+  const today = new Date()
+  const diffMs = today.getTime() - due.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+  return diffDays > 0 ? diffDays : 0
+}
+export interface CustomerInfo {
+  accountNumber: string
+  accountName: string
+  serviceAddress: string
+  meterNumber: string
+  rateClass: string
+  billMonth: string
 }

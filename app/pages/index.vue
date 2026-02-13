@@ -77,7 +77,6 @@ const printBill = () => {
           <section>
             <OmecoEnvironmentalImpact :bill="bill" />
           </section>
-
         </div>
 
         <!-- RIGHT COLUMN -->
@@ -99,6 +98,9 @@ const printBill = () => {
     <footer class="border-t border-gray-800 px-4 py-3">
       <OmecoPaymentAndSupport :bill="bill" />
     </footer>
+    <section>
+      <BillBackPage :bill="bill" />
+    </section>
 
     <!-- PRINT BUTTON -->
     <div class="flex justify-center print:hidden p-4 border-t">

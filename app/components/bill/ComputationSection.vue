@@ -1,79 +1,86 @@
 <script setup lang="ts">
 import type { OmecoBill } from '~/types/omeco-bill'
-import SectionTitle from './SectionTitle.vue'
 
 const props = defineProps<{
   bill: OmecoBill
 }>()
 
 const formatPeso = (value: number) =>
-  `₱ ${value.toFixed(2)}`
+  `₱${value.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`
 </script>
 
 <template>
-  <section class="space-y-3 text-[9px] leading-tight">
-
+  <section class="border border-gray-300 rounded p-2 bg-white break-inside-avoid text-[9px] leading-tight">
     <!-- SECTION TITLE -->
-    <SectionTitle title="How your bill was computed" />
+    <h3 class="font-bold text-[10px] text-gray-900 mb-1.5">
+      How your bill was computed
+    </h3>
 
     <!-- SERVICE INFORMATION -->
-    <div class="space-y-0.5">
-      <p><span class="font-semibold">Service ID:</span> {{ bill.serviceId }}</p>
+    <div class="space-y-0.5 mb-2 pb-1.5 border-b border-gray-200 text-[8px]">
+      <p><span class="font-semibold">Service ID Number:</span> {{ bill.serviceId }}</p>
       <p><span class="font-semibold">Contract Holder:</span> {{ bill.consumerName }}</p>
       <p><span class="font-semibold">Service Address:</span> {{ bill.address }}</p>
     </div>
 
     <!-- METERING INFORMATION -->
-    <div class="border border-gray-300 rounded p-2 space-y-1">
-      <p class="font-semibold">Metering Information</p>
-
-      <div class="grid grid-cols-5 text-center font-semibold border-b pb-1">
-        <div>Meter No</div>
-        <div>Previous</div>
-        <div>Current</div>
-        <div>Multiplier</div>
-        <div>kWh</div>
-      </div>
-
-      <div class="grid grid-cols-5 text-center pt-1">
-        <div>{{ bill.meterNumber }}</div>
-        <div>{{ bill.meter.previous }}</div>
-        <div>{{ bill.meter.current }}</div>
-        <div>{{ bill.meter.multiplier }}</div>
-        <div class="font-semibold">{{ bill.meter.consumption }}</div>
-      </div>
+    <div class="mb-2">
+      <p class="font-bold text-[9px] mb-1">Metering Information</p>
+      
+      <table class="w-full text-[8px] border-collapse">
+        <thead>
+          <tr class="border-b border-gray-300">
+            <th class="text-left pb-0.5 font-semibold">Meter No</th>
+            <th class="text-right pb-0.5 font-semibold">Prev.</th>
+            <th class="text-right pb-0.5 font-semibold">Curr.</th>
+            <th class="text-right pb-0.5 font-semibold">Multi</th>
+            <th class="text-right pb-0.5 font-semibold">Reg.</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="py-0.5">{{ bill.meterNumber }}</td>
+            <td class="text-right">{{ bill.meter.previous }}</td>
+            <td class="text-right">{{ bill.meter.current }}</td>
+            <td class="text-right">{{ bill.meter.multiplier || 1.0 }}</td>
+            <td class="text-right font-semibold">{{ bill.meter.consumption }} kWh</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- RATE COMPONENTS -->
-    <div class="space-y-1">
-      <p class="font-semibold">Rate Components</p>
-
-      <!-- TABLE HEADER -->
-      <div class="grid grid-cols-4 font-semibold border-b pb-1">
-        <div>Description</div>
-        <div class="text-right">Base</div>
-        <div class="text-right">Price</div>
-        <div class="text-right">Amount</div>
-      </div>
-
-      <!-- CHARGES -->
-      <div
-        v-for="charge in bill.charges"
-        :key="charge.key"
-        class="grid grid-cols-4 py-0.5"
-      >
-        <div class="truncate">{{ charge.label }}</div>
-        <div class="text-right">
-          {{ charge.base ?? '-' }}
-        </div>
-        <div class="text-right">
-          {{ charge.price ?? '-' }}
-        </div>
-        <div class="text-right font-medium">
-          {{ formatPeso(charge.amount) }}
-        </div>
-      </div>
+    <div>
+      <p class="font-bold text-[9px] mb-1">Rate Components</p>
+      
+      <table class="w-full text-[8px] border-collapse">
+        <thead>
+          <tr class="border-b border-gray-300">
+            <th class="text-left pb-0.5 font-semibold">Component</th>
+            <th class="text-right pb-0.5 font-semibold">Base</th>
+            <th class="text-right pb-0.5 font-semibold">Price</th>
+            <th class="text-right pb-0.5 font-semibold">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr 
+            v-for="charge in bill.charges" 
+            :key="charge.key"
+            class="border-b border-gray-100"
+          >
+            <td class="py-0.5 truncate">{{ charge.label }}</td>
+            <td class="text-right">{{ charge.base ?? '-' }}</td>
+            <td class="text-right">{{ charge.price ?? '-' }}</td>
+            <td class="text-right font-semibold">{{ formatPeso(charge.amount) }}</td>
+          </tr>
+          
+          <!-- Total -->
+          <tr class="border-t-2 border-gray-400">
+            <td colspan="3" class="pt-1 font-bold text-[9px]">Total Energy Amount</td>
+            <td class="pt-1 text-right font-bold text-[9px]">{{ formatPeso(bill.totalChargesThisPeriod) }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-
   </section>
 </template>
